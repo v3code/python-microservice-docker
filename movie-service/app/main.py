@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+import uvicorn
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
+import os
 
 metadata.create_all(engine)
 
@@ -14,5 +16,13 @@ async def startup():
 async def shutdown():
     await database.disconnect()
 
-
 app.include_router(movies, prefix='/api/v1/movies', tags=['movies'])
+
+def main():
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host=host, port=port)
+
+if __name__ == "__main__":
+    main()
+    

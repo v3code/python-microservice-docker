@@ -1,14 +1,28 @@
-FROM python:3.8-slim
+FROM python:3.8 as base
 
-WORKDIR /app
+WORKDIR /code
 
-COPY ./requirements.txt /app/requirements.txt
+ENV PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random 
 
-RUN apt-get update \
-    && apt-get install gcc -y \
-    && apt-get clean
+RUN pip install "poetry==1.5.1"
 
-RUN pip install -r /app/requirements.txt \
-    && rm -rf /root/.cache/pip
+COPY . .
 
-COPY . /app/
+RUN poetry config installer.max-workers 1
+
+EXPOSE ${PORT}
+
+FROM base AS dev
+
+# WORKDIR /code
+
+RUN poetry install --no-interaction --no-ansi
+
+
+FROM base AS prod
+
+# WORKDIR /code
+
+RUN poetry install --without dev --no-interaction --no-ansi
